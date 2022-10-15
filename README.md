@@ -1,2 +1,3 @@
-# wizchat
-contextual conversational customer engagement platform, we envision this as unified text, phone, and video conversation
+#WizChat
+
+it's a microservice practice project but we envision this one as a unified contextual conversational customer engagement platform :)
