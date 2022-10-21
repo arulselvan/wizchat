@@ -12,6 +12,7 @@ receivers:
             - "*"
           max_age: 7200
       grpc:
+        endpoint: 0.0.0.0:4317
 exporters:
   otlp/data-prepper:
     endpoint: data-prepper:21890

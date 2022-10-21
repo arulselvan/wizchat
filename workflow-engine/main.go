@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.uber.org/zap"
 )
 
@@ -15,6 +17,7 @@ type WorkFlowConfig struct {
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(otelgin.Middleware("workflow-engine"))
 
 	// return Workflow information for router
 	r.GET("/workflow/config", func(c *gin.Context) {
@@ -38,6 +41,8 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	cleanup := initTracer()
+	defer cleanup(context.Background())
 	r := setupRouter()
 	r.Run(":8080")
 }

@@ -8,7 +8,7 @@ routes.get("/chat/initiate", async (req, res) => {
   logger.info("inside chat initiate");
 
   logger.info("routing chat request");
-  const response = await axios.post("http://router-service:8080/route", {
+  const response = await axios.post("http://router-service:8081/route", {
     reqType: "chat",
     userId: "101",
     businessLine: "sales",

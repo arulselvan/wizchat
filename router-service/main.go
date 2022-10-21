@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 type TaskReq struct {
@@ -36,6 +39,7 @@ type TaskQueueResponse struct {
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(otelgin.Middleware("router-service"))
 	logger, _ := zap.NewProduction()
 	sugar := logger.Sugar()
 
@@ -111,6 +115,9 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	cleanup := initTracer()
+	defer cleanup(context.Background())
+
 	r := setupRouter()
 	r.Run(":8080")
 }
