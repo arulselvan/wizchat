@@ -1,0 +1,37 @@
+version: "3"
+services:
+  chat-service:
+    build: ./chat-service
+    image: chat-service
+    container_name: chat-service
+    logging:
+      driver: fluentd
+    ports:
+      - "8080:8080"
+
+  router-service:
+    build: ./router-service
+    image: router-service
+    container_name: router-service
+    logging:
+      driver: fluentd
+    ports:
+      - "8081:8080"
+
+  workflow-engine:
+    build: ./workflow-engine
+    image: workflow-engine
+    container_name: workflow-engine
+    logging:
+      driver: fluentd
+    ports:
+      - "8082:8080"
+
+  task-queue:
+    build: ./task-queue
+    image: task-queue
+    container_name: task-queue
+    logging:
+      driver: fluentd
+    ports:
+      - "8083:80"

@@ -1,9 +1,11 @@
+using System.Collections;
 using Microsoft.AspNetCore.Mvc;
 
 namespace task_queue.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+
 public class QueueController : ControllerBase
 {
 
@@ -15,10 +17,12 @@ public class QueueController : ControllerBase
     }
 
     [HttpPost(Name = "enqueue")]
-    public string Post(Task taskInfo)
+    public Response Post(Task taskInfo)
     {
         _logger.LogInformation("Inside Enqueue");
         _logger.LogInformation("Task Info:{@task}", taskInfo);
-        return "Task Successfully Enqueued";
+        TaskQueue.taskQueueList.Enqueue(taskInfo);
+        return new Response { Status = true, Message = "Task Successfully Enqueued" };
     }
+
 }

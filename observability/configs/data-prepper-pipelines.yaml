@@ -1,0 +1,79 @@
+otel-trace-pipeline:
+  workers: 2
+  delay: "100"
+  source:
+    otel_trace_source:
+      ssl: false # Change this to enable encryption in transit
+      record_type: event
+      proto_reflection_service: true
+      health_check_service: true
+      unframed_requests: true
+      authentication:
+        unauthenticated:
+  buffer:
+    bounded_blocking:
+      buffer_size: 10240
+      batch_size: 160
+  sink:
+    - pipeline:
+        name: "raw-pipeline"
+    - pipeline:
+        name: "service-map-pipeline"
+
+raw-pipeline:
+  workers: 2
+  source:
+    pipeline:
+      name: "otel-trace-pipeline"
+  buffer:
+    bounded_blocking:
+      buffer_size: 10240
+      batch_size: 160
+  processor:
+    - otel_trace_raw:
+    - otel_trace_group:
+        hosts: ["http://opensearch-node1:9200"]
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch-node1:9200"]
+        index_type: trace-analytics-raw
+        insecure: true
+
+service-map-pipeline:
+  workers: 2
+  delay: "100"
+  source:
+    pipeline:
+      name: "otel-trace-pipeline"
+  processor:
+    - service_map_stateful:
+        window_duration: 180
+  buffer:
+    bounded_blocking:
+      buffer_size: 10240
+      batch_size: 160
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch-node1:9200"]
+        index_type: trace-analytics-service-map
+        insecure: true
+
+log-pipeline:
+  source:
+    http:
+      # Explicitly disable SSL
+      ssl: false
+      # Explicitly disable authentication
+      authentication:
+        unauthenticated:
+      # The default port that will listen for incoming logs
+      port: 2021
+  processor:
+    - grok:
+        match:
+          log: [ "%{COMMONAPACHELOG}" ]
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch-node1:9200"]
+        index: app-logs
+        insecure: true
