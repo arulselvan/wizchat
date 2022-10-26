@@ -1,3 +1,5 @@
+using System.Diagnostics.Metrics;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -23,8 +25,25 @@ builder.Services.AddOpenTelemetryTracing((builder) =>
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("task-queue"))
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
-        .AddOtlpExporter();
+        .AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = new Uri("http://otel-collector:4317");
+        });
 });
+
+// Configure metrics
+
+
+builder.Services.AddOpenTelemetryMetrics(builder =>
+{
+    builder.AddHttpClientInstrumentation();
+    builder.AddAspNetCoreInstrumentation();
+    builder.AddMeter("TaskQueueMetrics");
+    builder.AddOtlpExporter(options => options.Endpoint = new Uri("http://otel-collector:4317"));
+});
+
+var meter = new Meter("TaskQueueMetrics");
+
 
 
 var app = builder.Build();

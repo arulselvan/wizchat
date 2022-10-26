@@ -19,6 +19,7 @@ public class QueueController : ControllerBase
     [HttpPost(Name = "enqueue")]
     public Response Post(Task taskInfo)
     {
+        //requestCounter.Add(1, KeyValuePair.Create<string, object?>("name", "enqueue"));
         _logger.LogInformation("Inside Enqueue");
         _logger.LogInformation("Task Info:{@task}", taskInfo);
         TaskQueue.taskQueueList.Enqueue(taskInfo);

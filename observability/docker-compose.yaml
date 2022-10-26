@@ -42,19 +42,19 @@ services:
 
   data-prepper:
     container_name: data-prepper
-    image: opensearchproject/data-prepper:1.5.1
+    image: opensearchproject/data-prepper:2.0.0
     ports:
       - 4900:4900
       - 2021:2021
       - 21890:21890
     volumes:
-      - ./configs/data-prepper-pipelines.yaml:/usr/share/data-prepper/pipelines.yaml
+      - ./configs/data-prepper-pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
     networks:
       - observability-net
 
   otel-collector:
     container_name: otel-collector
-    image: otel/opentelemetry-collector-contrib:0.59.0
+    image: otel/opentelemetry-collector:0.62.1 
     command: ['--config=/etc/otel-collector-config.yaml']
     volumes:
       - ./configs/otel-collector.yaml:/etc/otel-collector-config.yaml
@@ -76,9 +76,31 @@ services:
       - ./configs/parsers.conf:/fluent-bit/etc/parsers.conf
     networks:
       - observability-net
+      
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.39.1
+    ports:
+      - 9000:9090
+    volumes:
+      - ./configs/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.2.1
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    volumes:
+      - ./configs/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - grafana-data:/var/lib/grafana
 
 volumes:
   opensearch-data1:
+  prometheus-data:
+  grafana-data:
 
 networks:
   observability-net:

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io/ioutil"
@@ -11,6 +10,9 @@ import (
 	"go.uber.org/zap"
 
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 type TaskReq struct {
@@ -37,6 +39,8 @@ type TaskQueueResponse struct {
 	Message string `json:"message"`
 }
 
+var tracer = otel.Tracer("gin-server")
+
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(otelgin.Middleware("router-service"))
@@ -61,10 +65,17 @@ func setupRouter() *gin.Engine {
 			return
 		}
 
+		_, span := tracer.Start(c.Request.Context(), "getUser", oteltrace.WithAttributes(attribute.String("id", "arul-test")))
+		defer span.End()
+
 		logger.Info("Received Task Request", zap.Any("requests", taskReq))
 
 		logger.Info("Invoking Workflow engine to retrive config")
-		response, err := http.Get("http://workflow-engine:8080/workflow/config")
+		//response, err := http.Get("http://workflow-engine:8080/workflow/config")
+
+		response, err := SendRequest(c, "GET", "http://workflow-engine:8080/workflow/config", nil)
+
+		//response, err := SendRequest(c, "GET", "http://localhost:8082/workflow/config", nil)
 
 		if err != nil {
 			logger.Error(err.Error())
@@ -91,11 +102,15 @@ func setupRouter() *gin.Engine {
 
 		postBody, _ := json.Marshal(taskQueueReq)
 
-		reqBody := bytes.NewBuffer(postBody)
+		//reqBody := bytes.NewBuffer(postBody)
 
-		logger.Info("Invoking Task Queue for scheduling", zap.Any("reqBody", reqBody))
+		//logger.Info("Invoking Task Queue for scheduling", zap.Any("reqBody", reqBody))
 
-		taskQueueHTTPResponse, err := http.Post("http://task-queue:80/queue", "application/json", reqBody)
+		//taskQueueHTTPResponse, err := http.Post("http://task-queue:80/queue", "application/json", reqBody)
+
+		taskQueueHTTPResponse, err := SendRequest(c, "POST", "http://task-queue:80/queue", postBody)
+
+		//taskQueueHTTPResponse, err := SendRequest(c, "POST", "http://localhost:8083/queue", postBody)
 
 		if err != nil {
 			logger.Fatal(err.Error())

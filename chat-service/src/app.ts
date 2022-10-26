@@ -1,5 +1,5 @@
 import express from "express";
-
+import { countAllRequests } from "./lib/metric";
 import routes from "./routes";
 
 class App {
@@ -13,6 +13,7 @@ class App {
 
   middlewares() {
     this.server.use(express.json());
+    this.server.use(countAllRequests());
   }
 
   routes() {

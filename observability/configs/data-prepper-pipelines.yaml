@@ -4,7 +4,7 @@ otel-trace-pipeline:
   source:
     otel_trace_source:
       ssl: false # Change this to enable encryption in transit
-      record_type: event
+      #record_type: event
       proto_reflection_service: true
       health_check_service: true
       unframed_requests: true
@@ -71,9 +71,23 @@ log-pipeline:
   processor:
     - grok:
         match:
-          log: [ "%{COMMONAPACHELOG}" ]
+          log: ["%{COMMONAPACHELOG}"]
   sink:
     - opensearch:
         hosts: ["http://opensearch-node1:9200"]
-        index: app-logs
+        index: app-logs-%{yyyy.MM.dd}
+        insecure: true
+
+metrics-pipeline:
+  source:
+    otel_metrics_source:
+      ssl: false
+      authentication:
+        unauthenticated:
+  processor:
+    - otel_metrics_raw_processor:
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch-node1:9200"]
+        index: metrics-otel-v1-%{yyyy.MM.dd}
         insecure: true

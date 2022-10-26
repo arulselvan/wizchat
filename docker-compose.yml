@@ -35,3 +35,8 @@ services:
       driver: fluentd
     ports:
       - "8083:80"
+
+networks:
+  default:
+    external:
+      name: observability_observability-net

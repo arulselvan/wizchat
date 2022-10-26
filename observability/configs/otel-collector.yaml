@@ -18,6 +18,11 @@ exporters:
     endpoint: data-prepper:21890
     tls:
       insecure: true
+  otlp/data-prepper-metric:
+    endpoint: data-prepper:21891
+    tls:
+      insecure: true
+  logging:
 processors:
   batch:
 service:
@@ -27,4 +32,8 @@ service:
       receivers: [otlp]
       exporters: [otlp/data-prepper]
       processors: [batch]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/data-prepper-metric]
 

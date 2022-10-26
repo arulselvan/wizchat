@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -14,6 +15,8 @@ type WorkFlowConfig struct {
 	TargetQueueName string `json:"targetQueue"`
 	Priority        string `json:"priority"`
 }
+
+var tracer = otel.Tracer("gin-server")
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()

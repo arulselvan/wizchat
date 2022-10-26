@@ -3,21 +3,36 @@ const {
   getNodeAutoInstrumentations,
 } = require("@opentelemetry/auto-instrumentations-node");
 const { diag, DiagConsoleLogger, DiagLogLevel } = require("@opentelemetry/api");
-const { OTLPTraceExporter } = require("@opentelemetry/exporter-trace-otlp-http");
-const { Resource } = require('@opentelemetry/resources');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
+const {
+  OTLPTraceExporter,
+} = require("@opentelemetry/exporter-trace-otlp-http");
+const { Resource } = require("@opentelemetry/resources");
+const {
+  SemanticResourceAttributes,
+} = require("@opentelemetry/semantic-conventions");
 
 // For troubleshooting, set the log level to DiagLogLevel.DEBUG
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 
-const traceExporter = new OTLPTraceExporter();
+//http://otel-collector:4318/v1/traces
+const traceExporter = new OTLPTraceExporter({
+  url: "http://otel-collector:4318/v1/traces",
+});
 
 const sdk = new opentelemetry.NodeSDK({
   traceExporter: traceExporter,
   resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: 'my-service',
+    [SemanticResourceAttributes.SERVICE_NAME]: "chat-service",
   }),
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      "@opentelemetry/instrumentation-http": {
+        applyCustomAttributesOnSpan: (span: any) => {
+          span.setAttribute("chat-service", "arul-test");
+        },
+      },
+    }),
+  ],
 });
 
 sdk
@@ -30,6 +45,6 @@ process.on("SIGTERM", () => {
   sdk
     .shutdown()
     .then(() => console.log("Tracing terminated"))
-    .catch((error:any) => console.log("Error terminating tracing", error))
+    .catch((error: any) => console.log("Error terminating tracing", error))
     .finally(() => process.exit(0));
 });
